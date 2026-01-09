@@ -8,7 +8,7 @@ Roland R. Netz, Erica Ipocoana, Dirk Peschka, and Marita Thomas
 
 
 ## Variables
-- $\varphi_l, \varphi_c, \varphi_v$ : phase fields (liquid, crystal, vapor) with $\varphi_l+\varphi_c+\varphi_v=1$
+- $\varphi=(\varphi_l, \varphi_c, \varphi_v)$ : phase fields (liquid, crystal, vapor) with $\varphi_l+\varphi_c+\varphi_v=1$
 - $s$ : solute concentration
 - $\mu_l, \mu_c, \mu_v, \mu_s$ : chemical potentials
 - $\kappa$ : Lagrange multiplier for constraint
