@@ -1,10 +1,10 @@
 # Model for evaporation of water and with three phases (liquid, crystal, vapor) and a solute concentration
 
-Supplemental code for the paper **Combined effects of evaporation, sedimentation and  solute crystallization on the 
-dynamics of aerosol size distributions on multiple length and time scales** by Sina Zendehroud, Ole Kleinjung, Philip Loche, Lyderic Bocquet,
+**Description**: Supplemental code for the paper *Combined effects of evaporation, sedimentation and  solute crystallization on the 
+dynamics of aerosol size distributions on multiple length and time scales* by Sina Zendehroud, Ole Kleinjung, Philip Loche, Lyderic Bocquet,
 Roland R. Netz, Erica Ipocoana, Dirk Peschka, and Marita Thomas
 
-Code/model authors: Erica Ipocoana, Dirk Peschka, Marita Thomas
+**Code/Model authors**: Erica Ipocoana, Dirk Peschka, Marita Thomas
 
 
 ## Variables
