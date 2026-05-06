@@ -20,15 +20,15 @@ parameters['form_compiler']['optimize'] = True
 # Parameter sets (compact format)
 # =============================================================================
 P_basic = dict(
-    # Surface tensions: [γ_l, γ_c, γ_v]
-    γ = [1/8, 1/8, 2.0],
-    # Energy: [ε, s_sat, Λ]
+    # Surface tensions: [gamma_l, gamma_c, gamma_v]
+    gamma = [1/8, 1/8, 2.0],
+    # Energy: [eps, s_sat, Lambda]
     FP = [0.2*2,0.3,100],
     # Mobilities: [[m_ll,m_lv,m_lc], [m_vl,m_vv,m_vc], [m_sl,m_sv,m_sc]]
     m = [[1.0, 1.0, 0.01], [0.01, 1.0, 0.01], [0.01, 1.0, 0.01]],
     # Rates: [evaporation, crystallization]
     h = [1.0, 1.0],
-    # Energy: [λ, β,c0]
+    # Energy: [lam, beta,c0]
     E = [10.0, -10.0, 0.01],
     # Geometry: [r0, L]
     G = [3.0, 4.0],
@@ -50,11 +50,11 @@ PARS = P1
 variant = 'P1'
 
 # Unpack
-γ_l, γ_c, γ_v = PARS['γ']
+gamma_l, gamma_c, gamma_v = PARS['gamma']
 (m_ll, m_lv, m_lc), (m_vl, m_vv, m_vc), (m_sl, m_sv, m_sc) = PARS['m']
 he0, hc0 = PARS['h']
-ε,s_sat,Λ = PARS['FP']
-λ,β,c_0 = PARS['E']
+eps,s_sat,Lambda = PARS['FP']
+lam,beta,c_0 = PARS['E']
 r0, L = PARS['G']
 RADI, T = PARS['S']
 FNAME = PARS['NAME']
@@ -70,58 +70,58 @@ if RADI:
 else:
   r = Constant(1.0)
 
-def W(φ):
-  W1 = conditional(lt(φ,0),Λ*φ**2,18*(φ*(1-φ))**2)
-  W2 = conditional(gt(φ,1),Λ*(1-φ)**2,W1)
+def W(phi):
+  W1 = conditional(lt(phi,0),Lambda*phi**2,18*(phi*(1-phi))**2)
+  W2 = conditional(gt(phi,1),Lambda*(1-phi)**2,W1)
   return W2
 
 # energy
 def energy(q):
-    φ_l,φ_c,φ_v,s,μ_l,μ_c,μ_v,μ_s,κ = split(q)
+    phi_l,phi_c,phi_v,s,mu_l,mu_c,mu_v,mu_s,kappa = split(q)
     
-    E  = γ_l * ε/2 * inner(grad(φ_l),grad(φ_l))*r*dx
-    E += γ_c * ε/2 * inner(grad(φ_c),grad(φ_c))*r*dx
-    E += γ_v * ε/2 * inner(grad(φ_v),grad(φ_v))*r*dx
-    E += γ_l/ε * W(φ_l)*r*dx
-    E += γ_c/ε * W(φ_c)*r*dx
-    E += γ_v/ε * W(φ_v)*r*dx
-    # E += δ * inner(grad(s),grad(s))*dx
+    E  = gamma_l * eps/2 * inner(grad(phi_l),grad(phi_l))*r*dx
+    E += gamma_c * eps/2 * inner(grad(phi_c),grad(phi_c))*r*dx
+    E += gamma_v * eps/2 * inner(grad(phi_v),grad(phi_v))*r*dx
+    E += gamma_l/eps * W(phi_l)*r*dx
+    E += gamma_c/eps * W(phi_c)*r*dx
+    E += gamma_v/eps * W(phi_v)*r*dx
+    # E += delta * inner(grad(s),grad(s))*dx
 
-    E += (s*ln(s) + (1-s)*ln(1-s) + β*φ_c*(s-s_sat))*r*dx
-    E += λ * φ_v * s *r*dx
-    E += κ*(φ_l + φ_c + φ_v - 1)*r*dx
-    # E += μ_inf * φ_v*r*dx
+    E += (s*ln(s) + (1-s)*ln(1-s) + beta*phi_c*(s-s_sat))*r*dx
+    E += lam * phi_v * s *r*dx
+    E += kappa*(phi_l + phi_c + phi_v - 1)*r*dx
+    # E += mu_inf * phi_v*r*dx
     return E
 
 
 # single time step
-def evolve(old_q, τ):
+def evolve(old_q, tau):
     # set up function spaces
     q,v = Function(Q),TestFunction(Q)
-    φ_l,φ_c,φ_v,s,μ_l,μ_c,μ_v,μ_s,κ = split(q)
-    vφ_l,vφ_c,vφ_v,vs,vμ_l,vμ_c,vμ_v,vμ_s,vκ = split(v)
-    old_φ_l,old_φ_c,old_φ_v,old_s,old_μ_l,old_μ_c,old_μ_v,old_μ_s,old_κ = split(old_q)
+    phi_l,phi_c,phi_v,s,mu_l,mu_c,mu_v,mu_s,kappa = split(q)
+    vphi_l,vphi_c,vphi_v,vs,vmu_l,vmu_c,vmu_v,vmu_s,vkappa = split(v)
+    old_phi_l,old_phi_c,old_phi_v,old_s,old_mu_l,old_mu_c,old_mu_v,old_mu_s,old_kappa = split(old_q)
 
     # define energy
     E = energy(q)
-    m_s = m_sl*abs(old_φ_l) + m_sv*abs(old_φ_v) + m_sc*abs(old_φ_c)
-    m_l = m_ll*abs(old_φ_l) + m_lv*abs(old_φ_v) + m_lc*abs(old_φ_c)
-    m_v = m_vl*abs(old_φ_l) + m_vv*abs(old_φ_v) + m_vc*abs(old_φ_c)
+    m_s = m_sl*abs(old_phi_l) + m_sv*abs(old_phi_v) + m_sc*abs(old_phi_c)
+    m_l = m_ll*abs(old_phi_l) + m_lv*abs(old_phi_v) + m_lc*abs(old_phi_c)
+    m_v = m_vl*abs(old_phi_l) + m_vv*abs(old_phi_v) + m_vc*abs(old_phi_c)
 
-    h_eva = he0*abs(old_φ_l)*abs(old_φ_v)
-    h_cry = hc0*abs(old_φ_l) 
+    h_eva = he0*abs(old_phi_l)*abs(old_phi_v)
+    h_cry = hc0*abs(old_phi_l) 
 
     # define weak form
-    Res  = (μ_l*vφ_l + μ_c*vφ_c + μ_v*vφ_v + μ_s*vs)*r*dx - derivative(E, q, v)
-    Res += m_l*τ*inner(grad(μ_l),grad(vμ_l))*r*dx + vμ_l*(φ_l-old_φ_l)*r*dx
-    Res += vμ_c*(φ_c-old_φ_c)*r*dx
-    Res += m_v*τ*inner(grad(μ_v),grad(vμ_v))*r*dx + vμ_v*(φ_v-old_φ_v)*r*dx
+    Res  = (mu_l*vphi_l + mu_c*vphi_c + mu_v*vphi_v + mu_s*vs)*r*dx - derivative(E, q, v)
+    Res += m_l*tau*inner(grad(mu_l),grad(vmu_l))*r*dx + vmu_l*(phi_l-old_phi_l)*r*dx
+    Res += vmu_c*(phi_c-old_phi_c)*r*dx
+    Res += m_v*tau*inner(grad(mu_v),grad(vmu_v))*r*dx + vmu_v*(phi_v-old_phi_v)*r*dx
     
-    Res += abs(old_s)*abs(1-old_s)*m_s*τ*inner(grad(μ_s),grad(vμ_s))*r*dx + vμ_s*(s-old_s)*r*dx
+    Res += abs(old_s)*abs(1-old_s)*m_s*tau*inner(grad(mu_s),grad(vmu_s))*r*dx + vmu_s*(s-old_s)*r*dx
 
-    Res +=  τ*(-h_eva*(μ_v-μ_l) - h_cry*(μ_c-μ_l) )*vμ_l*r*dx
-    Res +=  τ*(                   h_cry*(μ_c-μ_l) )*vμ_c*r*dx
-    Res +=  τ*( h_eva*(μ_v-μ_l)                   )*vμ_v*r*dx
+    Res +=  tau*(-h_eva*(mu_v-mu_l) - h_cry*(mu_c-mu_l) )*vmu_l*r*dx
+    Res +=  tau*(                   h_cry*(mu_c-mu_l) )*vmu_c*r*dx
+    Res +=  tau*( h_eva*(mu_v-mu_l)                   )*vmu_v*r*dx
 
     bc = []
 
@@ -138,25 +138,25 @@ def evolve(old_q, τ):
     q.assign(old_q)
     iterations, converged = solver.solve()
     
-    dissi_ml = assemble(m_l*inner(grad(μ_l),grad(μ_l))*r*dx)
+    dissi_ml = assemble(m_l*inner(grad(mu_l),grad(mu_l))*r*dx)
     dissi_mc = 0.0
-    dissi_mv = assemble(m_v*inner(grad(μ_v),grad(μ_v))*r*dx)
-    dissi_ms = assemble(abs(old_s)*abs(1-old_s)*m_s*inner(grad(μ_s),grad(μ_s))*r*dx)
-    dissi_eva = assemble(h_eva*abs(μ_v-μ_l)**2*r*dx)
-    dissi_cry = assemble(h_cry*abs(μ_c-μ_l)**2*r*dx)
+    dissi_mv = assemble(m_v*inner(grad(mu_v),grad(mu_v))*r*dx)
+    dissi_ms = assemble(abs(old_s)*abs(1-old_s)*m_s*inner(grad(mu_s),grad(mu_s))*r*dx)
+    dissi_eva = assemble(h_eva*abs(mu_v-mu_l)**2*r*dx)
+    dissi_cry = assemble(h_cry*abs(mu_c-mu_l)**2*r*dx)
     dissi = [dissi_ml,dissi_mc,dissi_mv,dissi_ms,dissi_eva,dissi_cry]
     e = assemble(E)
 
     return q,e,iterations,converged,dissi
 
 # initial data
-#func = '1+tanh(3*(x[0]-r0)/ε)'
-func = '1+tanh(3*(pow(pow(x[0],2)+pow(x[1],2),0.5)-r0)/ε)'
-func = 'tanh(3*(pow(pow(x[0],2)+pow(x[1],2),0.5)-r0)/ε) + tanh(3*(pow(pow(x[0],2)+pow(x[1]-4.2,2),0.5)-1.0)/ε)'
-#func = '1+tanh(3*(pow(pow(x[0],2)+pow(x[1],2),0.5)-r0)/ε) + 1+tanh(3*(pow(pow(x[0],2)+pow((x[1]-4.0),2),0.5)-1.0)/ε)'
-salt = f'c_0*exp(-λ * (1 - (1-0.5*({func}))))'
+#func = '1+tanh(3*(x[0]-r0)/eps)'
+func = '1+tanh(3*(pow(pow(x[0],2)+pow(x[1],2),0.5)-r0)/eps)'
+func = 'tanh(3*(pow(pow(x[0],2)+pow(x[1],2),0.5)-r0)/eps) + tanh(3*(pow(pow(x[0],2)+pow(x[1]-4.2,2),0.5)-1.0)/eps)'
+#func = '1+tanh(3*(pow(pow(x[0],2)+pow(x[1],2),0.5)-r0)/eps) + 1+tanh(3*(pow(pow(x[0],2)+pow((x[1]-4.0),2),0.5)-1.0)/eps)'
+salt = f'c_0*exp(-lam * (1 - (1-0.5*({func}))))'
 iphil = f'(1-0.5*({func}))'
-idata = Expression((iphil,"0",f'1-({iphil})',salt,"0","0","0","0","0"),degree=2,ε=ε,c_0=c_0,λ=λ,r0=r0)
+idata = Expression((iphil,"0",f'1-({iphil})',salt,"0","0","0","0","0"),degree=2,eps=eps,c_0=c_0,lam=lam,r0=r0)
 old_q = interpolate(idata,Q)
 
 old_q,e,it,conv,dissi = evolve(old_q,1e-4)
@@ -174,32 +174,32 @@ list_dissi_cry = []
 
 # initial time stepping, later adaptive
 t = 0
-τ = 0.3e-2
+tau = 0.3e-2
 n_steps = 4000
-dt = Constant(τ)
+dt = Constant(tau)
 f1 = File(f'data/phil{variant}.pvd')
 f2 = File(f'data/phic{variant}.pvd')
 f3 = File(f'data/phiv{variant}.pvd')
 f4 = File(f'data/salt{variant}.pvd')
 for i in tqdm(range(n_steps)):
-  dt.assign(τ)
+  dt.assign(tau)
   
   q,e,it,conv,dissi = evolve(old_q, dt)
   if conv:
-    t += τ
+    t += tau
     old_q.assign(q)
     if (i % 2 == 0):
       times.append(t)
       energies.append(e)
       # sols.append(q)
-      φ_l,φ_c,φ_v,s,_,_,_,_,_ = q.split()
-      φ_l.rename("φ_l","phase field liquid")
-      φ_c.rename("φ_c","phase field crystal")
-      φ_v.rename("φ_v","phase field vapor")
+      phi_l,phi_c,phi_v,s,_,_,_,_,_ = q.split()
+      phi_l.rename("phi_l","phase field liquid")
+      phi_c.rename("phi_c","phase field crystal")
+      phi_v.rename("phi_v","phase field vapor")
       s.rename("s","salt concentration")
-      f1 << (φ_l,t)
-      f2 << (φ_c,t)
-      f3 << (φ_v,t)
+      f1 << (phi_l,t)
+      f2 << (phi_c,t)
+      f3 << (phi_v,t)
       f4 << (s,t)
       list_dissi_ml.append(dissi[0])
       list_dissi_mc.append(dissi[1])
@@ -208,10 +208,10 @@ for i in tqdm(range(n_steps)):
       list_dissi_eva.append(dissi[4])
       list_dissi_cry.append(dissi[5])
     if it < 3:
-      τ *= 1.1
+      tau *= 1.1
     if it > 4:
-      τ *= 0.9
+      tau *= 0.9
   else:
-    τ *= 0.5
+    tau *= 0.5
   if t>T:
     break
