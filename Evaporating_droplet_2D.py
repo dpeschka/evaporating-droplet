@@ -10,7 +10,7 @@ logging.getLogger("UFL_LEGACY").setLevel(logging.ERROR)
 logging.getLogger("UFL").setLevel(logging.ERROR)
 set_log_level(LogLevel.ERROR)
 
-parameters['linear_algebra_backend'] = 'PETSc'
+#parameters['linear_algebra_backend'] = 'mumps'
 parameters['reorder_dofs_serial'] = True
 parameters['form_compiler']['quadrature_degree'] = 3
 parameters['form_compiler']['cpp_optimize'] = True
@@ -130,6 +130,8 @@ def evolve(old_q, tau):
     solver  = NonlinearVariationalSolver(problem)
 
     prm = solver.parameters
+    prm['newton_solver']['linear_solver'] = 'mumps'
+
     prm['newton_solver']['error_on_nonconvergence'] = False
     prm['newton_solver']['report'] = False
     prm['newton_solver']['absolute_tolerance'] = 1e-6
@@ -159,7 +161,10 @@ iphil = f'(1-0.5*({func}))'
 idata = Expression((iphil,"0",f'1-({iphil})',salt,"0","0","0","0","0"),degree=2,eps=eps,c_0=c_0,lam=lam,r0=r0)
 old_q = interpolate(idata,Q)
 
+# no newline in print
+print('Init..', end='')
 old_q,e,it,conv,dissi = evolve(old_q,1e-4)
+print('..done.')
 print('init:',it,conv)
 times = []
 energies = []
